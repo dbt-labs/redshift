@@ -73,6 +73,9 @@
         {{ create_compressed_table(tmp_analyze_identifier, tmp_identifier, compression_recommendation) }}
       {% endcall %}
 
+     -- {{ adapter.drop(identifier, existing_type) }}
+     {{ adapter.rename(tmp_identifier, identifier) }}
+
   {% else %}
 
       {% set cols = adapter.get_columns_in_table(schema, identifier) %}
@@ -89,16 +92,15 @@
         select {{ dest_cols_csv }} from {{ tmp_analyze_identifier }}
       {% endcall %}
 
+      {{ truncate + insert }}
+
   {% endif %}
 
   {%- if should_create_table and existing_type in ['table', 'view'] -%}
 
-     {{ adapter.drop(identifier, existing_type) }}
-     {{ adapter.rename(tmp_identifier, identifier) }}
 
   {% elif should_create_table %}
 
-     {{ adapter.rename(tmp_identifier, identifier) }}
 
   {% endif %}
 
