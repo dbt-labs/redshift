@@ -1,7 +1,6 @@
 
 
-{{ config(materialized='compressed_table', sort='id', dist='id') }}
-
+{{ config(materialized='compressed_table', sort='id', dist='id', comprows=1000000) }}
 
 select
     id,
