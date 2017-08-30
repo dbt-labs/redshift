@@ -7,7 +7,7 @@ version: '1.0'
 
 # This setting configures which "profile" dbt uses for this project. Profiles contain
 # database connection information, and should be configured in the  ~/.dbt/profiles.yml file
-profile: 'default'
+profile: 'garage-redshift'
 
 # These configurations specify where dbt should look for different types of files.
 # The `source-paths` config, for example, states that source models can be found
