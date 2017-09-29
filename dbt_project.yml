@@ -11,4 +11,4 @@ models:
       materialized: ephemeral
 
     views:
-      materialized: views
+      materialized: view
