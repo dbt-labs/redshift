@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="etc/dbt-logo.png" alt="dbt logo" />
+</p>
+
+----
+
 ## Redshift data models
 Current Version: 0.0.1
 
