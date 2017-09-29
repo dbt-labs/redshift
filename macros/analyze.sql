@@ -53,9 +53,11 @@
     {%- endif -%}
 
     {%- if table_ref is none -%}
-        {{ analyze_all(column_spec) }}
+        {% set cmd = analyze_all(column_spec) %}
     {%- else -%}
-        {{ analyze_table(table_ref, columns, column_spec) }}
+        {% set cmd = analyze_table(table_ref, columns, column_spec) %}
     {%- endif -%}
+
+    {{ cmd }}
 
 {%- endmacro %}

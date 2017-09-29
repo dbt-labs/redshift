@@ -10,6 +10,10 @@
 
 {% macro vacuum_all(type, to) -%}
 
+    {%- if type == 'reindex' -%}
+        {{ exceptions.raise_compiler_error("vacuum reindex called without a `table_ref`") }}
+    {%- endif -%}
+
     vacuum {{ type }}
 
 {%- endmacro %}
@@ -38,11 +42,13 @@
 {% macro vacuum(table_ref=none, type='full', to=95) -%}
 
     {% if table_ref is none -%}
-        {{ vacuum_all(type, to) }}
+        {% set cmd = vacuum_all(type, to) %}
     {%- elif type == 'reindex' -%}
-        {{ vacuum_reindex(table_ref) }}
+        {% set cmd = vacuum_reindex(table_ref) %}
     {%- else -%}
-        {{ vacuum_table(table_ref, type, to) }}
+        {% set cmd = vacuum_table(table_ref, type, to) %}
     {%- endif -%}
+
+    {{ cmd }}
 
 {%- endmacro %}
