@@ -1,6 +1,14 @@
 name: 'redshift'
-version: '0.1'
+version: '0.0.1'
 
 source-paths: ["models"]
 macro-paths: ["macros"]
 test-paths: ["tests"]
+
+models:
+  redshift:
+    base:
+      materialized: ephemeral
+
+    views:
+      materialized: views
