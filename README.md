@@ -1,6 +1,5 @@
 ## Redshift data models
-
-WIP
+Current Version: 0.0.1
 
 [dbt](https://www.getdbt.com) models for [Redshift](https://aws.amazon.com/redshift/) warehouses.
 
@@ -23,13 +22,16 @@ Each of these base models maps 1-to-1 with the underlying Redshift table.
 - [stv_tbl_perm](http://docs.aws.amazon.com/redshift/latest/dg/r_STV_TBL_PERM.html)
 - [svv_diskusage](http://docs.aws.amazon.com/redshift/latest/dg/r_SVV_DISKUSAGE.html)
 
-- redshift_cost
-- users
+__Ephemeral Models__
 
----
-- [What is dbt](https://dbt.readme.io/docs/overview)?
-- Read the [dbt viewpoint](https://dbt.readme.io/docs/viewpoint)
-- [Installation](https://dbt.readme.io/docs/installation)
-- Join the [chat](http://ac-slackin.herokuapp.com/) on Slack for live questions and support.
+These ephemeral models simplify some of Redshift's field naming and logic, to make the data more usable.
 
----
+- redshift_cost: transforms the start and max explain cost values from stl_explain into floating point values
+- users: transforms pg_users to make the field names grokable
+
+__View Models__
+
+These views are designed to make debugging your Redshift cluster more straightforward. They are, in effect, materializations of the [Diagnostic Queries for Query Tuning](http://docs.aws.amazon.com/redshift/latest/dg/diagnostic-queries-for-query-tuning.html) from Redshift's documentation.
+
+- queries: Simplified view of queries, including explain cost, execution times, and queue times.
+- table_stats: Gives insight on tables in your warehouse. Includes information on sort and dist keys, table size on disk, and more.
