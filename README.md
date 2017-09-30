@@ -4,12 +4,12 @@
 
 ----
 
-## Redshift data models
+# Redshift data models
 Current Version: 0.0.1
 
 [dbt](https://www.getdbt.com) models for [Redshift](https://aws.amazon.com/redshift/) warehouses.
 
-### Models
+## Models
 
 This package provides a number of base models for Redshift system tables, as well as a few utility views that usefully combine the base models.
 
@@ -43,18 +43,36 @@ These views are designed to make debugging your Redshift cluster more straightfo
 - table_stats: Gives insight on tables in your warehouse. Includes information on sort and dist keys, table size on disk, and more.
 
 
-### Macros
+## Macros
 
-#### analyze ([source](macros/analyze.sql))
+### analyze ([source](macros/analyze.sql))
 Use this macro to analyze tables. The arguments to this macro map to the arguments of the Redshift [analyze](http://docs.aws.amazon.com/redshift/latest/dg/r_ANALYZE.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs.
 
 __Arguments:__
  - `table_ref`: `ref`, or `<schema>.<table>` qualified name of the table to analyze. If not provided, all tables in the database will be analyzed.
  - `columns`: list of columns to analyze. If provided, `table_ref` must also be provided (default: none)
  - `column_spec`: One of: `predicate columns` | `all columns` (default: `all columns`)
- - `analyze_threshold_percent`: sets the `analyze_threshold_percent` variable before running analyze (default: 10)
+ - `analyze_threshold_percent`: sets `analyze_threshold_percent` before running `analyze` (default: 10)
  
-__Usage:__
+ __Usage:__
+```sql
+-- models/my_model.sql
+{{
+  config({
+    'materialized':'incremental',
+    'sql_where': 'TRUE',
+    'sort':'id',
+    'post-hook': [
+      analyze(this.final_name())
+    ]
+  })
+}}
+    
+select 1 as id  
+
+```
+ 
+__Detailed Usage:__
 ```sql
 -- Analyze all tables in the database
 {{ analyze() }}
@@ -78,15 +96,33 @@ __Usage:__
 {{ analyze(column_spec='predicate columns', analyze_threshold_percent=20) }}
 ```
 
-#### vacuum ([source](macros/vacuum.sql))
-Use this macro to vacuum tables. The arguments to this macro map to the arguments of the Redshift [vacuum](http://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs. Note that `vacuum` cannot run inside of a transaction. To indicate to dbbt that `vacuum` hooks should run outside of the model transaction, use `after_commit()` as shown below.
+### vacuum ([source](macros/vacuum.sql))
+Use this macro to vacuum tables. The arguments to this macro map to the arguments of the Redshift [vacuum](http://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs. Note that `vacuum` cannot run inside of a transaction. To indicate to dbt that `vacuum` hooks should run outside of the model transaction, use `after_commit()` as shown below.
 
 __Arguments:__
  - `table_ref`: `ref`, or `<schema>.<table>` qualified name of the table to vacuum. If not provided, all tables in the database will be vacuumed.
  - `type`: One of: `full` | `sort only` | `delete only` | `reindex` (default: `full`)
  - `to`: An integer threshold for the vacuum command between 0 and 100 (default: 95)
- 
+
 __Usage:__
+```sql
+-- models/my_model.sql
+{{
+  config({
+    'materialized':'incremental',
+    'sql_where': 'TRUE',
+    'sort':'id',
+    'post-hook': [
+      after_commit(vacuum(this.final_name(), type='full', to=95))
+    ]
+  })
+}}
+    
+select 1 as id  
+
+```
+
+__Detailed Usage:__
 ```sql
 -- Vacuum all tables in the database
 {{ after_commit(vacuum()) }}
