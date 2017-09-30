@@ -44,6 +44,8 @@ These views are designed to make debugging your Redshift cluster more straightfo
 
 
 ## Macros
+This package provides macros that make it easy to run common maintainence tasks on your Redshift cluster.
+
 
 ### analyze ([source](macros/analyze.sql))
 Use this macro to analyze tables. The arguments to this macro map to the arguments of the Redshift [analyze](http://docs.aws.amazon.com/redshift/latest/dg/r_ANALYZE.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs.
