@@ -11,34 +11,36 @@
   {% call statement('existing_columns', fetch_result=True) %}
     set search_path to {{ schema }};
     -- ignore the sort and dist keys -- we don't want to drop those
-    select "column", "type", "encoding"
+    select
+        case when sortkey = 1 or distkey = TRUE then 0 else 1 end as should_compress,
+        "column",
+        "type",
+        "encoding"
     from pg_table_def
     where tablename = '{{ table }}'
-      and sortkey != 1
-      and distkey = FALSE;
   {% endcall %}
-
 {% endmacro %}
 
 
 {% macro get_compression_sql(table, existing_cols, compression_recommendation) -%}
 
   {%- set recs = compression_recommendation['data'] | sort(attribute=1) -%}
-  {%- set cols = existing_cols['data'] | sort(attribute=0) -%}
+  {%- set cols = existing_cols['data'] | sort(attribute=1) -%}
 
   {%- set updates = [] -%}
   {%- set drops = [] -%}
   {%- for i in range(recs | length) -%}
 
-    {%- set column_name = cols[i][0] -%}
-    {%- set column_type = cols[i][1] -%}
-    {%- set old_column_encoding = cols[i][2] -%}
+    {%- set should_compress = cols[i][0] -%}
+    {%- set column_name = cols[i][1] -%}
+    {%- set column_type = cols[i][2] -%}
+    {%- set old_column_encoding = cols[i][3] -%}
     {%- set new_column_encoding = recs[i][2] -%}
     {%- set estimated_reduction = recs[i][3] | float -%}
 
     {%- set old_column_name = column_name ~ "_old" -%}
 
-    {%- if new_column_encoding != old_column_encoding and estimated_reduction > 0 %}
+    {%- if should_compress and new_column_encoding != old_column_encoding and estimated_reduction > 0 %}
 
         -- Column: {{ column_name }}, Estimated reduction: {{ estimated_reduction }}
         alter table {{ table }} rename {{ column_name }} to {{ old_column_name }};
@@ -63,12 +65,12 @@
 
 {%- macro compress_table(table, comprows=none, column_override=none) -%}
 
-  {% set _ = find_analyze_recommendations(table, comprows) %}
-  {% set _ = find_existing_columns(table.schema, table.table) %}
+  {% set _ = redshift.find_analyze_recommendations(table, comprows) %}
+  {% set _ = redshift.find_existing_columns(table.schema, table.table) %}
   {%- set compression_recommendation = load_result('compression_recommendation') -%}
   {%- set existing_cols = load_result('existing_columns') -%}
 
-  {% set query = get_compression_sql(table, existing_cols, compression_recommendation) %}
+  {% set query = redshift.get_compression_sql(table, existing_cols, compression_recommendation) %}
 
   {% if (query | trim | length) > 0 %} 
     {{ query }}
