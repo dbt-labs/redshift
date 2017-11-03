@@ -1,81 +1,93 @@
-{% macro find_analyze_recommendations(table, comprows=none) %}
+{% macro find_analyze_recommendations(schema, table, comprows=none) %}
 
   {% set comprows_s = '' if comprows is none else 'comprows ' ~ comprows %}
-  {% call statement('compression_recommendation', fetch_result=True) %}
-    analyze compression {{ table }} {{ comprows_s }}
-  {% endcall %}
+  {% set query %}
+    analyze compression "{{ schema }}"."{{ table }}" {{ comprows_s }}
+  {% endset %}
+
+  {% set columns = get_data(query, ['table', 'column', 'encoding', 'reduction_pct']) %}
+
+  {% set ret = {} %}
+  {% for column in columns %}
+      {%- set _ = ret.update({column.column: column}) -%}
+  {% endfor %}
+
+  {{ return(ret) }}
+
 {% endmacro %}
 
-{% macro find_existing_columns(schema, table) %}
+{% macro build_optimized_definition(definition, recommendation) -%}
 
-  {% call statement('existing_columns', fetch_result=True) %}
-    set search_path to {{ schema }};
-    -- ignore the sort and dist keys -- we don't want to drop those
-    select
-        case when sortkey = 1 or distkey = TRUE then 0 else 1 end as should_compress,
-        "column",
-        "type",
-        "encoding"
-    from pg_table_def
-    where tablename = '{{ table }}'
-  {% endcall %}
-{% endmacro %}
+    {% set optimized = {} %}
+    {% set _ = optimized.update(definition) %}
+    {% for name, column in definition['columns'].items() %}
+        {% set recommended_encoding = recommendation[name] %}
 
+        {% if recommended_encoding['encoding'] != column['encoding'] %}
+            {{ log("    Changing " ~ name ~ ": " ~ column['encoding'] ~ " -> " ~ recommended_encoding['encoding'] ~ " (" ~ recommended_encoding['reduction_pct'] ~ "%)", info=True) }}
+        {% else %}
+            {{ log("Not Changing " ~ name ~ ": " ~ column['encoding'], info=True) }}
+        {% endif %}
 
-{% macro get_compression_sql(table, existing_cols, compression_recommendation) -%}
+        {% set _ = optimized['columns'][name].update({"encoding": recommended_encoding['encoding']}) %}
+    {% endfor %}
 
-  {%- set recs = compression_recommendation['data'] | sort(attribute=1) -%}
-  {%- set cols = existing_cols['data'] | sort(attribute=1) -%}
-
-  {%- set updates = [] -%}
-  {%- set drops = [] -%}
-  {%- for i in range(recs | length) -%}
-
-    {%- set should_compress = cols[i][0] -%}
-    {%- set column_name = cols[i][1] -%}
-    {%- set column_type = cols[i][2] -%}
-    {%- set old_column_encoding = cols[i][3] -%}
-    {%- set new_column_encoding = recs[i][2] -%}
-    {%- set estimated_reduction = recs[i][3] | float -%}
-
-    {%- set old_column_name = column_name ~ "_old" -%}
-
-    {%- if should_compress and new_column_encoding != old_column_encoding and estimated_reduction > 0 %}
-
-        -- Column: {{ column_name }}, Estimated reduction: {{ estimated_reduction }}
-        alter table {{ table }} rename {{ column_name }} to {{ old_column_name }};
-        alter table {{ table }} add column {{ column_name }} {{ column_type }} encode {{ new_column_encoding }};
-
-        {%- set _ = updates.append(column_name ~ ' = ' ~ old_column_name) -%}
-        {%- set _ = drops.append(old_column_name) %}
-
-    {%- endif -%}
-  {%- endfor -%}
-
-  {%- if (updates | length) > 0 -%}
-    update {{ table }} set
-    {{ updates | join(",\n ") }};
-  {% endif -%}
-
-  {%- for drop in drops -%}
-    alter table {{ table }} drop column {{ drop }} cascade;
-  {% endfor -%}
+    {{ return(optimized) }}
 
 {%- endmacro %}
 
-{%- macro compress_table(table, comprows=none, column_override=none) -%}
+{%- macro insert_into(from_schema, from_table, to_schema, to_table) -%}
 
-  {% set _ = redshift.find_analyze_recommendations(table, comprows) %}
-  {% set _ = redshift.find_existing_columns(table.schema, table.table) %}
-  {%- set compression_recommendation = load_result('compression_recommendation') -%}
-  {%- set existing_cols = load_result('existing_columns') -%}
+    {% call statement('_') %}
+    insert into "{{ to_schema }}"."{{ to_table }}" (
+        select * from "{{ from_schema }}"."{{ from_table }}"
+    )
+    {% endcall %}
 
-  {% set query = redshift.get_compression_sql(table, existing_cols, compression_recommendation) %}
+{%- endmacro -%}
 
-  {% if (query | trim | length) > 0 %} 
-    {{ query }}
-  {% else %}
-    select 'nothing to do' as status
+{%- macro atomic_swap(schema, from_table, to_table) -%}
+
+    {% call statement('_') %}
+    begin;
+    drop table if exists "{{ schema }}"."{{ from_table }}__backup";
+    alter table "{{ schema }}"."{{ from_table }}" rename to "{{ from_table }}__backup";
+    alter table "{{ schema }}"."{{ to_table }}" rename to "{{ from_table }}";
+    -- drop table "{{ from_schema }}"."{{ from_table }}__backup";
+    commit;
+    {% endcall %}
+
+{%- endmacro -%}
+
+{%- macro compress_table(schema, table, comprows=none, sort_style=none, sort_keys=none, dist_style=none, dist_key=none) -%}
+
+  {% set recommendation = redshift.find_analyze_recommendations(schema, table, comprows) %}
+  {% set definition = redshift.fetch_table_definition(schema, table) %}
+
+  {% if definition is none %}
+    {{ return(none) }}
   {% endif %}
 
+  {% set optimized = build_optimized_definition(definition, recommendation) %}
+
+  {% set _ = optimized.update({"keys": optimized.get('keys', {}) | default({})}) %}
+  {% if sort_style %} {% set _ = optimized['keys'].update({"sort_style": sort_style}) %} {% endif %}
+  {% if sort_keys %}  {% set _ = optimized['keys'].update({"sort_keys": sort_keys}) %} {% endif %}
+  {% if dist_style %} {% set _ = optimized['keys'].update({"dist_style": dist_style}) %} {% endif %}
+  {% if dist_key %}   {% set _ = optimized['keys'].update({"dist_key": dist_key}) %} {% endif %}
+
+  {% set new_table = table ~ "__compressed" %}
+  {% set _ = optimized.update({'name': new_table}) %}
+
+  {# Build the DDL #}
+  {% set ddl = build_ddl(optimized) %}
+
+  {% call statement('_') %}
+    {{ ddl }}
+  {% endcall %}
+
+  {{ insert_into(schema, table, schema, new_table) }}
+  {{ atomic_swap(schema, table, new_table) }}
+
+  select 1
 {%- endmacro %}

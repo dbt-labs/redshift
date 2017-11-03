@@ -17,7 +17,10 @@ with columns as (
             else upper(format_type(a.atttypid, a.atttypmod))
         end as col_datatype,
 
-        format_encoding((a.attencodingtype)::integer) as col_encoding,
+        case
+            when format_encoding((a.attencodingtype)::integer) = 'none' then 'raw'
+            else format_encoding((a.attencodingtype)::integer)
+        end as col_encoding,
 
         case
             when a.atthasdef is true then adef.adsrc

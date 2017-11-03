@@ -3,8 +3,8 @@ with dist_config as (
 
     -- gets distyle and distkey (if there is one)
     select distinct
-        n.nspname as schemaname,
-        c.relname as tablename,
+        trim(n.nspname) as schemaname,
+        trim(c.relname) as tablename,
 
         case
             when c.reldiststyle = 0 then 'even'
@@ -26,8 +26,8 @@ sort_config as (
 
     -- get sortstyle and sortkeys
     select distinct
-        n.nspname as schemaname,
-        c.relname as tablename,
+        trim(n.nspname) as schemaname,
+        trim(c.relname) as tablename,
         case
             when min(a.attsortkeyord) over (partition by n.nspname, c.relname) = -1 then 'interleaved'
             else 'compound'
