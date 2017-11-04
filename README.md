@@ -81,6 +81,5 @@ Example usage:
       "{{ compress_table(this.schema, this.table, drop_backup=False) }}"
     ]
   })
-}}
-    
+}}    
 ```
