@@ -5,7 +5,7 @@
     analyze compression "{{ schema }}"."{{ table }}" {{ comprows_s }}
   {% endset %}
 
-  {% set columns = get_data(query, ['table', 'column', 'encoding', 'reduction_pct']) %}
+  {% set columns = redshift.get_data(query, ['table', 'column', 'encoding', 'reduction_pct']) %}
 
   {% set ret = {} %}
   {% for column in columns %}
