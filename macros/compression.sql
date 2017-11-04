@@ -74,7 +74,7 @@
     {{ return(none) }}
   {% endif %}
 
-  {% set optimized = build_optimized_definition(definition, recommendation) %}
+  {% set optimized = redshift.build_optimized_definition(definition, recommendation) %}
 
   {% set _ = optimized.update({"keys": optimized.get('keys', {}) | default({})}) %}
   {% if sort_style %} {% set _ = optimized['keys'].update({"sort_style": sort_style}) %} {% endif %}
@@ -86,8 +86,8 @@
   {% set _ = optimized.update({'name': new_table}) %}
 
   {# Build the DDL #}
-  {{ build_ddl_sql(optimized) }}
-  {{ insert_into_sql(schema, table, schema, new_table) }}
-  {{ atomic_swap_sql(schema, table, new_table, drop_backup) }}
+  {{ redshift.build_ddl_sql(optimized) }}
+  {{ redshift.insert_into_sql(schema, table, schema, new_table) }}
+  {{ redshift.atomic_swap_sql(schema, table, new_table, drop_backup) }}
 
 {%- endmacro %}

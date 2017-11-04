@@ -33,12 +33,12 @@
         tablename,
         description,
         relation_type
-    from ({{ fetch_table_data_sql() }})
+    from ({{ redshift.fetch_table_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
 
-  {% set table = get_data(sql, ['schema', 'name', 'description', 'type']) %}
+  {% set table = redshift.get_data(sql, ['schema', 'name', 'description', 'type']) %}
   {{ return(table) }}
 
 {% endmacro %}
@@ -54,12 +54,12 @@
         col_encoding,
         col_default,
         col_not_null
-    from ({{ fetch_column_data_sql() }})
+    from ({{ redshift.fetch_column_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
 
-  {% set columns = get_data(sql, ['position', 'name', 'description', 'type', 'encoding', 'default', 'not_null']) %}
+  {% set columns = redshift.get_data(sql, ['position', 'name', 'description', 'type', 'encoding', 'default', 'not_null']) %}
 
   {% set ret = {} %}
   {% for column in columns %}
@@ -78,12 +78,12 @@
         sort_keys,
         diststyle,
         dist_key
-    from ({{ fetch_sort_dist_key_data_sql() }})
+    from ({{ redshift.fetch_sort_dist_key_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
 
-  {% set keys = get_data(sql, ['sort_style', 'sort_keys', 'dist_style', 'dist_key']) %}
+  {% set keys = redshift.get_data(sql, ['sort_style', 'sort_keys', 'dist_style', 'dist_key']) %}
   {% for key in keys %}
     {% set _ = key.update({'sort_keys': key['sort_keys'].split('|')}) %}
   {% endfor %}
@@ -98,19 +98,19 @@
     select
         constraint_type,
         col_constraint
-    from ({{ fetch_constraint_data_sql() }})
+    from ({{ redshift.fetch_constraint_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
 
-  {% set constraints = get_data(sql, ['constraint_type', 'col_constraint']) %}
+  {% set constraints = redshift.get_data(sql, ['constraint_type', 'col_constraint']) %}
   {{ return(constraints) }}
 
 {% endmacro %}
 
 
 {% macro fetch_table_definition(schema_name, table_name) %}
-  {% set tables = fetch_table_data(schema_name, table_name) %}
+  {% set tables = redshift.fetch_table_data(schema_name, table_name) %}
 
   {% if (tables | length) == 0 %}
     {{ return(none) }}
@@ -120,9 +120,9 @@
   {% endif %}
 
   {% set table = tables[0] %}
-  {% set columns = fetch_column_data(schema_name, table_name) %}
-  {% set keys = fetch_sort_dist_key_data(schema_name, table_name) | first %}
-  {% set constraints = fetch_constraints(schema_name, table_name) %}
+  {% set columns = redshift.fetch_column_data(schema_name, table_name) %}
+  {% set keys = redshift.fetch_sort_dist_key_data(schema_name, table_name) | first %}
+  {% set constraints = redshift.fetch_constraints(schema_name, table_name) %}
 
   {% set _ = table.update({"columns": columns}) %}
   {% set _ = table.update({"keys": keys}) %}

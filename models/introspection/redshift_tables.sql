@@ -1,2 +1,2 @@
 
-{{ fetch_table_data_sql() }}
+{{ redshift.fetch_table_data_sql() }}
