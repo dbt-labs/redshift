@@ -32,7 +32,7 @@
       [ [COMPOUND | INTERLEAVED ] SORTKEY ( column_name [, ...] ) ]
 #}
 
-{% macro build_ddl(def) %}
+{% macro build_ddl_sql(def) %}
 
     -- DROP
     drop table if exists "{{ def['schema'] }}"."{{ def['name'] }}";

@@ -33,7 +33,7 @@
         tablename,
         description,
         relation_type
-    from dbt_dbanin.redshift_tables
+    from ({{ fetch_table_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
@@ -54,7 +54,7 @@
         col_encoding,
         col_default,
         col_not_null
-    from dbt_dbanin.redshift_columns
+    from ({{ fetch_column_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
@@ -78,7 +78,7 @@
         sort_keys,
         diststyle,
         dist_key
-    from dbt_dbanin.redshift_sort_dist_keys
+    from ({{ fetch_sort_dist_key_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
@@ -98,7 +98,7 @@
     select
         constraint_type,
         col_constraint
-    from dbt_dbanin.redshift_constraints
+    from ({{ fetch_constraint_data_sql() }})
     where schemaname = '{{ schema_name }}'
       and tablename = '{{ table_name }}'
   {% endset %}
@@ -110,8 +110,6 @@
 
 
 {% macro fetch_table_definition(schema_name, table_name) %}
-
-
   {% set tables = fetch_table_data(schema_name, table_name) %}
 
   {% if (tables | length) == 0 %}

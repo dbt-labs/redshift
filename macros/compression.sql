@@ -36,30 +36,36 @@
 
 {%- endmacro %}
 
-{%- macro insert_into(from_schema, from_table, to_schema, to_table) -%}
+{%- macro insert_into_sql(from_schema, from_table, to_schema, to_table) -%}
 
-    {% call statement('_') %}
     insert into "{{ to_schema }}"."{{ to_table }}" (
         select * from "{{ from_schema }}"."{{ from_table }}"
-    )
-    {% endcall %}
+    );
 
 {%- endmacro -%}
 
-{%- macro atomic_swap(schema, from_table, to_table) -%}
+{%- macro atomic_swap_sql(schema, from_table, to_table, drop_backup) -%}
 
-    {% call statement('_') %}
     begin;
-    drop table if exists "{{ schema }}"."{{ from_table }}__backup";
+    -- drop table if exists "{{ schema }}"."{{ from_table }}__backup" cascade;
     alter table "{{ schema }}"."{{ from_table }}" rename to "{{ from_table }}__backup";
     alter table "{{ schema }}"."{{ to_table }}" rename to "{{ from_table }}";
-    -- drop table "{{ from_schema }}"."{{ from_table }}__backup";
+    {% if drop_backup %}
+        drop table "{{ schema }}"."{{ from_table }}__backup" cascade;
+    {% else %}
+        {{ log('drop_backup is False -- not dropping ' ~ from_table ~ "__backup") }}
+    {% endif %}
     commit;
-    {% endcall %}
 
 {%- endmacro -%}
 
-{%- macro compress_table(schema, table, comprows=none, sort_style=none, sort_keys=none, dist_style=none, dist_key=none) -%}
+{%- macro compress_table(schema, table, drop_backup=False,
+                         comprows=none, sort_style=none, sort_keys=none,
+                         dist_style=none, dist_key=none) -%}
+
+  {% if not execute %}
+    {{ return(none) }}
+  {% endif %}
 
   {% set recommendation = redshift.find_analyze_recommendations(schema, table, comprows) %}
   {% set definition = redshift.fetch_table_definition(schema, table) %}
@@ -80,14 +86,8 @@
   {% set _ = optimized.update({'name': new_table}) %}
 
   {# Build the DDL #}
-  {% set ddl = build_ddl(optimized) %}
+  {{ build_ddl_sql(optimized) }}
+  {{ insert_into_sql(schema, table, schema, new_table) }}
+  {{ atomic_swap_sql(schema, table, new_table, drop_backup) }}
 
-  {% call statement('_') %}
-    {{ ddl }}
-  {% endcall %}
-
-  {{ insert_into(schema, table, schema, new_table) }}
-  {{ atomic_swap(schema, table, new_table) }}
-
-  select 1
 {%- endmacro %}
