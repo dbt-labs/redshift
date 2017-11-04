@@ -24,9 +24,9 @@
         {% set recommended_encoding = recommendation[name] %}
 
         {% if recommended_encoding['encoding'] != column['encoding'] %}
-            {{ log("    Changing " ~ name ~ ": " ~ column['encoding'] ~ " -> " ~ recommended_encoding['encoding'] ~ " (" ~ recommended_encoding['reduction_pct'] ~ "%)", info=True) }}
+            {{ log("    Changing " ~ name ~ ": " ~ column['encoding'] ~ " -> " ~ recommended_encoding['encoding'] ~ " (" ~ recommended_encoding['reduction_pct'] ~ "%)") }}
         {% else %}
-            {{ log("Not Changing " ~ name ~ ": " ~ column['encoding'], info=True) }}
+            {{ log("Not Changing " ~ name ~ ": " ~ column['encoding']) }}
         {% endif %}
 
         {% set _ = optimized['columns'][name].update({"encoding": recommended_encoding['encoding']}) %}
