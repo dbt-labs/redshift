@@ -45,7 +45,7 @@ These views are designed to make debugging your Redshift cluster more straightfo
 
 __Introspection Models__
 
-These models (default ephemeral) make it possible to inspect tables, columns, constraints, and sort/dist keys of the Redshift cluster. These models are used to build column compression queries, but may also be generally useful. 
+These models (default ephemeral) make it possible to inspect tables, columns, constraints, and sort/dist keys of the Redshift cluster. These models are used to build column compression queries, but may also be generally useful.
 
 - [redshift_tables](models/introspection/redshift_tables.sql)
 - [redshift_columns](models/introspection/redshift_columns.sql)
@@ -81,5 +81,48 @@ Example usage:
       "{{ redshift.compress_table(this.schema, this.table, drop_backup=False) }}"
     ]
   })
-}}    
+}}
+```
+
+#### unload_table ([source](macros/unload.sql))
+
+This macro returns the SQL required to unload a Redshift table to one or more files on S3. The macro replicates all functionality provided by Redshift's [UNLOAD](http://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html) command.
+
+Macro signature:
+```
+{{ unload_table(schema,
+                table,
+                s3_path,
+                iam_role=None|String,
+                aws_key=None|String,
+                aws_secret=None|String,
+                manifest=Boolean,
+                delimiter=String,
+                null_as=String,
+                max_file_size=String,
+                escape=Boolean,
+                compression=None|GZIP|BZIP2,
+                add_quotes=Boolean,
+                encrypted=Boolean,
+                overwrite=Boolean,
+                parallel=Boolean) }}
+```
+
+Example usage:
+```
+{{
+  config({
+    "materialized":"table",
+    "sort": "id",
+    "dist": "id",
+    "post-hook": [
+      "{{ redshift.unload_table(this.schema,
+                                this.table,
+                                s3_path='s3://bucket/folder',
+                                aws_key='abcdef',
+                                aws_secret='ghijklm',
+                                delimiter='|') }}"
+    ]
+  })
+}}
 ```
