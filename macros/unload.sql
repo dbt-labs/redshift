@@ -21,8 +21,9 @@ where option is
 [ MAXFILESIZE [AS] max-size [ MB | GB ] ]
 
 #}
--- Unloads a Redshift query to S3
-{% macro unload_table(table,
+-- Unloads a Redshift table to S3
+{% macro unload_table(schema,
+                table,
                 s3_path,
                 iam_role=None,
                 aws_key=None,
@@ -39,7 +40,7 @@ where option is
                 parallel=False) %}
 
   -- compile UNLOAD statement
-  UNLOAD ('SELECT * FROM {{ table }}')
+  UNLOAD ('SELECT * FROM "{{ schema }}"."{{ table }}"')
   TO '{{ s3_path }}'
   {% if iam_role %}
   IAM_ROLE '{{ iam_role }}'
