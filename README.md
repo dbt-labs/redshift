@@ -121,7 +121,7 @@ Example usage:
                                 s3_path='s3://bucket/folder',
                                 aws_key='abcdef',
                                 aws_secret='ghijklm',
-                                delimter='|') }}"
+                                delimiter='|') }}"
     ]
   })
 }}
