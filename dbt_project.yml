@@ -10,5 +10,8 @@ models:
     base:
       materialized: ephemeral
 
+    introspection:
+      materialized: ephemeral
+
     views:
       materialized: view
