@@ -1,3 +1,5 @@
+--This model adds Mode Analytics-specific information to the redshift_query dbt model
+
 with extract_query_header as (
 select
   query,
@@ -17,7 +19,7 @@ join {{ ref('pg_user') }} pu
 on qt.userid = pu.user_id
 where pu.username = 'mode_readonly' --Only grab queries run by mode_readonly user
 )
-where row_number_reverse <= 2 --Only grab last two rows of querytext (this is where the query header will be always be)
+where row_number_reverse <= 2 --Only grab last two rows of querytext (this is where the mode-specific information will be always be)
 )
 group by query
 )
@@ -45,9 +47,8 @@ select
 from extract_query_header
 )
 where query_header_is_json is true
-)--,
+)
 
---output as (
 select
   q.*,
   qhis.mode_report_run_username,
@@ -57,4 +58,4 @@ select
   qhis.mode_report_run_is_scheduled
 from {{ ref('redshift_query') }} q
 left join query_header_info_segment qhis
-on q.query_id = qhis.query_id;
+on q.query_id = qhis.query_id
