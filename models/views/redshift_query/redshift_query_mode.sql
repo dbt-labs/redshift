@@ -55,6 +55,6 @@ select
   qhis.mode_report_run_url,
   qhis.mode_query_run_url,
   qhis.mode_report_run_is_scheduled
-from {{ ref('redshift_queries') }} q
+from {{ ref('redshift_query') }} q
 left join query_header_info_segment qhis
 on q.query_id = qhis.query_id;
