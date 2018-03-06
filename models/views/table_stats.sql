@@ -33,6 +33,7 @@ with unsorted_by_table as (
   , min(sort_key) as sort_key
   , max(attsortkeyord) as num_sort_keys
   , (max(attencodingtype) > 0) as is_encoded
+  , max(attnum) as num_columns
   from {{ref('pg_attribute')}}
   group by 1
 
@@ -84,6 +85,7 @@ select
 , (table_attributes.sort_key is not null) as is_sorted
 , table_attributes.sort_key
 , table_attributes.num_sort_keys
+, table_attributes.num_columns
 
 , table_sizes.size_in_megabytes
 , {{percentage('table_sizes.size_in_megabytes',
