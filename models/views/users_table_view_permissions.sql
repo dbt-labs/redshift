@@ -14,9 +14,9 @@ with tables as (
   
   select
     schema_name
-  , 'table' AS object_type
-  , table_name AS object_name
-  , schema_name + '.' + table_name AS full_object_name
+  , 'table' as object_type
+  , table_name as object_name
+  , '"' || schema_name || '"."' || table_name || '"' as full_object_name
   from tables
   where schema_name not in ('pg_catalog', 'information_schema')
   
@@ -24,9 +24,9 @@ with tables as (
   
   select
     schema_name
-  , 'view' AS object_type
-  , view_name AS object_name
-  , schema_name + '.' + view_name AS fullobj
+  , 'view' as object_type
+  , view_name as object_name
+  , '"' || schema_name || '"."' || view_name || '"' as full_object_name
   from views
   where schema_name not in ('pg_catalog', 'information_schema')
   
