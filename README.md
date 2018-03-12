@@ -34,7 +34,6 @@ __Ephemeral Models__
 These ephemeral models simplify some of Redshift's field naming and logic, to make the data more usable.
 
 - redshift_cost: transforms the start and max explain cost values from stl_explain into floating point values
-- users: transforms pg_users to make the field names grokable
 
 __View Models__
 
