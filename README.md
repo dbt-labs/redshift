@@ -76,7 +76,7 @@ Example usage:
 }}    
 ```
 
-### analyze ([source](macros/analyze.sql))
+#### analyze ([source](macros/analyze.sql))
 Use this macro to analyze tables. The arguments to this macro map to the arguments of the Redshift [analyze](http://docs.aws.amazon.com/redshift/latest/dg/r_ANALYZE.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs.
 
 __Arguments:__
@@ -127,7 +127,7 @@ __Detailed Usage:__
 {{ analyze(column_spec='predicate columns', analyze_threshold_percent=20) }}
 ```
 
-### vacuum ([source](macros/vacuum.sql))
+#### vacuum ([source](macros/vacuum.sql))
 Use this macro to vacuum tables. The arguments to this macro map to the arguments of the Redshift [vacuum](http://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs. Note that `vacuum` cannot run inside of a transaction. To indicate to dbt that `vacuum` hooks should run outside of the model transaction, use `after_commit()` as shown below.
 
 __Arguments:__
