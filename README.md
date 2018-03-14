@@ -1,9 +1,3 @@
-<p align="center">
-  <img src="etc/dbt-logo.png" alt="dbt logo" />
-</p>
-
-----
-
 # Redshift data models and utilities
 
 [dbt](https://www.getdbt.com) models for [Redshift](https://aws.amazon.com/redshift/) warehouses.
