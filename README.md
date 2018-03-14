@@ -4,8 +4,7 @@
 
 ----
 
-# Redshift data models
-Current Version: 0.0.1
+# Redshift data models and utilities
 
 [dbt](https://www.getdbt.com) models for [Redshift](https://aws.amazon.com/redshift/) warehouses.
 
@@ -42,10 +41,46 @@ These views are designed to make debugging your Redshift cluster more straightfo
 - queries: Simplified view of queries, including explain cost, execution times, and queue times.
 - table_stats: Gives insight on tables in your warehouse. Includes information on sort and dist keys, table size on disk, and more.
 
+__Introspection Models__
+
+These models (default ephemeral) make it possible to inspect tables, columns, constraints, and sort/dist keys of the Redshift cluster. These models are used to build column compression queries, but may also be generally useful. 
+
+- [redshift_tables](models/introspection/redshift_tables.sql)
+- [redshift_columns](models/introspection/redshift_columns.sql)
+- [redshift_constraints](models/introspection/redshift_constraints.sql)
+- [redshift_sort_dist_keys](models/introspection/redshift_sort_dist_keys.sql)
+
 
 ## Macros
-This package provides macros that make it easy to run common maintainence tasks on your Redshift cluster.
 
+#### compress_table ([source](macros/compression.sql))
+
+This macro returns the SQL required to auto-compress a table using the results of an `analyze compression` query. All comments, constraints, keys, and indexes are copied to the newly compressed table by this macro. Additionally, sort and dist keys can be provided to override the settings from the source table. By default, a backup table is made which is _not_ deleted. To delete this backup table after a successful copy, use `drop_backup` flag.
+
+Macro signature:
+```
+{{ compress_table(schema, table,
+                  drop_backup=False,
+                  comprows=none|Integer,
+                  sort_style=none|compound|interleaved,
+                  sort_keys=none|List<String>,
+                  dist_style=none|all|even,
+                  dist_key=none|String) }}
+```
+
+Example usage:
+```
+{{
+  config({
+    "materialized":"table",
+    "sort": "id",
+    "dist": "id",
+    "post-hook": [
+      "{{ redshift.compress_table(this.schema, this.table, drop_backup=False) }}"
+    ]
+  })
+}}    
+```
 
 ### analyze ([source](macros/analyze.sql))
 Use this macro to analyze tables. The arguments to this macro map to the arguments of the Redshift [analyze](http://docs.aws.amazon.com/redshift/latest/dg/r_ANALYZE.html) command. This macro should be used in `on-run-start`, `on-run-end`, `pre-hook`, or `post-hook` configs.
@@ -155,4 +190,5 @@ __Detailed Usage:__
 
 -- Vacuum {{ this }} model in 'sort only' mode. Skip if the table is less than 25% unsorted
 {{ after_commit(vacuum(this.final_name(), type='sort only', to=75)) }}
+
 ```
