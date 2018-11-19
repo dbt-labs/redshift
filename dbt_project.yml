@@ -5,13 +5,13 @@ source-paths: ["models"]
 macro-paths: ["macros"]
 test-paths: ["tests"]
 
+profile: redshift_package
+
 models:
   redshift:
     base:
       materialized: ephemeral
-
     introspection:
       materialized: ephemeral
-
     views:
       materialized: view
