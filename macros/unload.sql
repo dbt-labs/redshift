@@ -66,9 +66,11 @@ where option is
   HEADER
   {% endif %}
   {% if format %}
-  FORMAT AS '{{format}}'
+  FORMAT AS {{format|upper}}
   {% endif %}
+  {% if not format %}
   DELIMITER AS '{{ delimiter }}'
+  {% endif %}
   NULL AS '{{ null_as }}'
   MAXFILESIZE AS {{ max_file_size }}
   {% if escape %}
