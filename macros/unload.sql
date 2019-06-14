@@ -7,18 +7,23 @@ authorization
 
 where option is
 
-{ MANIFEST
-| DELIMITER [ AS ] 'delimiter-char'
-| FIXEDWIDTH [ AS ] 'fixedwidth-spec' }
+{ MANIFEST [ VERBOSE ] 
+| HEADER
+
+| [ FORMAT [AS] ] CSV
+| DELIMITER [ AS ] 'delimiter-char' 
+| FIXEDWIDTH [ AS ] 'fixedwidth-spec' }  
 | ENCRYPTED
-| BZIP2
-| GZIP
-| ADDQUOTES
+| BZIP2  
+| GZIP 
+| ZSTD
+| ADDQUOTES 
 | NULL [ AS ] 'null-string'
 | ESCAPE
 | ALLOWOVERWRITE
 | PARALLEL [ { ON | TRUE } | { OFF | FALSE } ]
-[ MAXFILESIZE [AS] max-size [ MB | GB ] ]
+| MAXFILESIZE [AS] max-size [ MB | GB ] ]
+| REGION [AS] 'aws-region'
 
 #}
 -- Unloads a Redshift table to S3
@@ -28,7 +33,10 @@ where option is
                 iam_role=None,
                 aws_key=None,
                 aws_secret=None,
+                aws_region=None,
                 manifest=False,
+                header=False,
+                format=None,
                 delimiter=",",
                 null_as="",
                 max_file_size='6 GB',
@@ -54,6 +62,12 @@ where option is
   {% if manifest %}
   MANIFEST
   {% endif %}
+  {% if header %}
+  HEADER
+  {% endif %}
+  {% if format %}
+  FORMAT AS '{{format}}'
+  {% endif %}
   DELIMITER AS '{{ delimiter }}'
   NULL AS '{{ null_as }}'
   MAXFILESIZE AS {{ max_file_size }}
@@ -74,6 +88,9 @@ where option is
   {% endif %}
   {% if not parallel %}
   PARALLEL OFF
+  {% endif %}
+  {% if aws_region %}
+  REGION '{{ aws_region }}'
   {% endif %}
 
 {% endmacro %}
