@@ -92,7 +92,10 @@ Macro signature:
                 iam_role=None|String,
                 aws_key=None|String,
                 aws_secret=None|String,
+                aws_region=None|String,
                 manifest=Boolean,
+                header=Boolean,
+                format=None|String,
                 delimiter=String,
                 null_as=String,
                 max_file_size=String,
@@ -117,6 +120,7 @@ Example usage:
                                 s3_path='s3://bucket/folder',
                                 aws_key='abcdef',
                                 aws_secret='ghijklm',
+                                header=True,
                                 delimiter='|') }}"
     ]
   })
