@@ -16,7 +16,7 @@
         {% set start=modules.datetime.datetime.now() %}
         {% set message_prefix=loop.index ~ " of " ~ loop.length %}
         {{ dbt_utils.log_info(message_prefix ~ " Vacuuming " ~ table) }}
-        {% set results=run_query("vacuum " ~ table) %}
+        {% do run_query("vacuum " ~ table) %}
         {{ dbt_utils.log_info(message_prefix ~ " Analyzing " ~ table) }}
         {% do run_query("analyze " ~ table) %}
         {% set end=modules.datetime.datetime.now() %}
