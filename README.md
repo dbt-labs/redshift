@@ -126,3 +126,19 @@ Example usage:
   })
 }}
 ```
+
+#### redshift_maintenance_operation ([source](macros/redshift_maintenance_operation.sql))
+
+This macro is intended to be run as an [operation](https://docs.getdbt.com/docs/using-operations). It vacuums and analyzes each table, with verbose logging.
+
+The user who runs this operation must be a super user.
+```
+$ dbt run-operation redshift_maintenance
+Running with dbt=0.14.2
+06:35:33 + 1 of 478 Vacuuming "analytics"."customer_orders"
+06:35:33 + 1 of 478 Analyzing "analytics"."customer_orders"
+06:35:33 + 1 of 478 Finished "analytics"."customer_orders" in 0.29s
+06:35:33 + 2 of 478 Vacuuming "analytics"."customer_payments"
+06:35:33 + 2 of 478 Analyzing "analytics"."customer_payments"
+06:35:33 + 2 of 478 Finished "analytics"."customer_payments" in 0.28s
+```
