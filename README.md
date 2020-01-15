@@ -153,11 +153,13 @@ the same pattern as the macro in [this package](macros/redshift_maintenance_oper
 ```sql
 -- my_project/macros/redshift_maintenance_operation.sql
 select
-    '"' || table_schema || '"."' || table_name || '"' as table_name
+  current_database() as table_database,
+  table_schema,
+  table_name
 from information_schema.tables
 where table_type = 'BASE TABLE'
     and table_schema not in ('information_schema', 'pg_catalog')
-    -- write your own contraints here
+    -- write your own constraints here
 order by table_schema, table_name
 
 ```

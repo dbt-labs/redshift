@@ -1,6 +1,8 @@
 {% macro vacuumable_tables_sql(exclude_schemas, exclude_schemas_like) %}
     select
-        '"' || table_schema || '"."' || table_name || '"' as table_name
+        current_database() as table_database,
+        table_schema,
+        table_name
     from information_schema.tables
     where table_type = 'BASE TABLE'
         and table_schema not in ('information_schema', 'pg_catalog')
@@ -35,18 +37,22 @@
 
     {% set vacuumable_tables=run_query(vacuumable_tables_sql) %}
 
-    {% set vacummable_tables_list=vacuumable_tables.columns[0].values()  %}
-
-    {% for table in vacummable_tables_list %}
+    {% for row in vacuumable_tables %}
+        {%- set relation_to_vacuum = adapter.get_relation(
+                                                database=row['table_database'],
+                                                schema=row['table_schema'],
+                                                identifier=row['table_name']
+                                    ) -%}
+        {% do run_query("commit") %}
         {% set start=modules.datetime.datetime.now() %}
         {% set message_prefix=loop.index ~ " of " ~ loop.length %}
-        {{ dbt_utils.log_info(message_prefix ~ " Vacuuming " ~ table) }}
-        {% do run_query("vacuum " ~ table) %}
-        {{ dbt_utils.log_info(message_prefix ~ " Analyzing " ~ table) }}
-        {% do run_query("analyze " ~ table) %}
+        {{ dbt_utils.log_info(message_prefix ~ " Vacuuming " ~ relation_to_vacuum) }}
+        {% do run_query("vacuum " ~ relation_to_vacuum) %}
+        {{ dbt_utils.log_info(message_prefix ~ " Analyzing " ~ relation_to_vacuum) }}
+        {% do run_query("analyze " ~ relation_to_vacuum) %}
         {% set end=modules.datetime.datetime.now() %}
         {% set total_seconds = (end - start).total_seconds() | round(2)  %}
-        {{ dbt_utils.log_info(message_prefix ~ " Finished " ~ table ~ " in " ~ total_seconds ~ "s") }}
+        {{ dbt_utils.log_info(message_prefix ~ " Finished " ~ relation_to_vacuum ~ " in " ~ total_seconds ~ "s") }}
     {% endfor %}
 
 {% endmacro %}
