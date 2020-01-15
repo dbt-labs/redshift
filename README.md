@@ -163,7 +163,10 @@ where table_type = 'BASE TABLE'
 order by table_schema, table_name
 
 ```
-This macro will skip any relations that are dropped in the time betwen running
+When you run the `redshift_maintenance` macro, your version of `vacuumable_tables_sql`
+will be respected.
+
+Note: This macro will skip any relations that are dropped in the time betwen running
 the initial query, and the point at which you try to vacuum it. This results in
 a message like so:
 ```
