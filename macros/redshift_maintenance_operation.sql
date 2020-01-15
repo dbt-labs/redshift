@@ -38,21 +38,28 @@
     {% set vacuumable_tables=run_query(vacuumable_tables_sql) %}
 
     {% for row in vacuumable_tables %}
+        {% set message_prefix=loop.index ~ " of " ~ loop.length %}
+
         {%- set relation_to_vacuum = adapter.get_relation(
                                                 database=row['table_database'],
                                                 schema=row['table_schema'],
                                                 identifier=row['table_name']
                                     ) -%}
         {% do run_query("commit") %}
-        {% set start=modules.datetime.datetime.now() %}
-        {% set message_prefix=loop.index ~ " of " ~ loop.length %}
-        {{ dbt_utils.log_info(message_prefix ~ " Vacuuming " ~ relation_to_vacuum) }}
-        {% do run_query("vacuum " ~ relation_to_vacuum) %}
-        {{ dbt_utils.log_info(message_prefix ~ " Analyzing " ~ relation_to_vacuum) }}
-        {% do run_query("analyze " ~ relation_to_vacuum) %}
-        {% set end=modules.datetime.datetime.now() %}
-        {% set total_seconds = (end - start).total_seconds() | round(2)  %}
-        {{ dbt_utils.log_info(message_prefix ~ " Finished " ~ relation_to_vacuum ~ " in " ~ total_seconds ~ "s") }}
+
+        {% if relation_to_vacuum %}
+            {% set start=modules.datetime.datetime.now() %}
+            {{ dbt_utils.log_info(message_prefix ~ " Vacuuming " ~ relation_to_vacuum) }}
+            {% do run_query("vacuum " ~ relation_to_vacuum) %}
+            {{ dbt_utils.log_info(message_prefix ~ " Analyzing " ~ relation_to_vacuum) }}
+            {% do run_query("analyze " ~ relation_to_vacuum) %}
+            {% set end=modules.datetime.datetime.now() %}
+            {% set total_seconds = (end - start).total_seconds() | round(2)  %}
+            {{ dbt_utils.log_info(message_prefix ~ " Finished " ~ relation_to_vacuum ~ " in " ~ total_seconds ~ "s") }}
+        {% else %}
+            {{ dbt_utils.log_info(message_prefix ~ ' Relation "' ~ row.values() | join ('"."') ~ '" does not exist') }}
+        {% endif %}
+
     {% endfor %}
 
 {% endmacro %}
