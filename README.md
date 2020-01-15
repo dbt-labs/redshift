@@ -147,4 +147,17 @@ The command can also be run with optional parameters to exclude schemas, either 
 ```
 $ dbt run-operation redshift_maintenance --args '{exclude_schemas: ["looker_scratch"], exclude_schemas_like: ["sinter\\_pr\\_%"]}'
 ```
+You can also implement your own query to choose which tables to vacuum. To do so,
+create a macro in your **own project** named `vacuumable_tables_sql`, following
+the same pattern as the macro in [this package](macros/redshift_maintenance_operation.sql):
+```sql
+-- my_project/macros/redshift_maintenance_operation.sql
+select
+    '"' || table_schema || '"."' || table_name || '"' as table_name
+from information_schema.tables
+where table_type = 'BASE TABLE'
+    and table_schema not in ('information_schema', 'pg_catalog')
+    -- write your own contraints here
+order by table_schema, table_name
 
+```
