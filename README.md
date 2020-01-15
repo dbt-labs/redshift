@@ -145,6 +145,6 @@ Running with dbt=0.14.2
 
 The command can also be run with optional parameters to exclude schemas, either with exact or regex matching. This can be useful for cases where the models (or the schemas themselves) tend to be short-lived and don't require vacuuming. For example:
 ```
-$ dbt run-operation redshift_maintenance --args '{exclude_schemas: ["looker_scratch"], exclude_schemas_like: ["sinter_pr_%"]}'
+$ dbt run-operation redshift_maintenance --args '{exclude_schemas: ["looker_scratch"], exclude_schemas_like: ["sinter\\_pr\\_%"]}'
 ```
 
