@@ -147,4 +147,28 @@ The command can also be run with optional parameters to exclude schemas, either 
 ```
 $ dbt run-operation redshift_maintenance --args '{exclude_schemas: ["looker_scratch"], exclude_schemas_like: ["sinter\\_pr\\_%"]}'
 ```
+You can also implement your own query to choose which tables to vacuum. To do so,
+create a macro in your **own project** named `vacuumable_tables_sql`, following
+the same pattern as the macro in [this package](macros/redshift_maintenance_operation.sql):
+```sql
+-- my_project/macros/redshift_maintenance_operation.sql
+select
+  current_database() as table_database,
+  table_schema,
+  table_name
+from information_schema.tables
+where table_type = 'BASE TABLE'
+    and table_schema not in ('information_schema', 'pg_catalog')
+    -- write your own constraints here
+order by table_schema, table_name
 
+```
+When you run the `redshift_maintenance` macro, your version of `vacuumable_tables_sql`
+will be respected.
+
+Note: This macro will skip any relations that are dropped in the time betwen running
+the initial query, and the point at which you try to vacuum it. This results in
+a message like so:
+```
+13:18:22 + 1 of 157 Relation "analytics"."dbt_claire"."amazon_orders" does not exist
+```
