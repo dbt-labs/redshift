@@ -152,18 +152,29 @@ create a macro in your **own project** named `vacuumable_tables_sql`, following
 the same pattern as the macro in [this package](macros/redshift_maintenance_operation.sql):
 ```sql
 -- my_project/macros/redshift_maintenance_operation.sql
-select
-  current_database() as table_database,
-  table_schema,
-  table_name
-from information_schema.tables
-where table_type = 'BASE TABLE'
-    and table_schema not in ('information_schema', 'pg_catalog')
-    -- write your own constraints here
-order by table_schema, table_name
+{% macro vacuumable_tables_sql(exclude_schemas, exclude_schemas_like) %}
+    select
+      current_database() as table_database,
+      table_schema,
+      table_name
+    from information_schema.tables
+    where table_type = 'BASE TABLE'
+        and table_schema not in ('information_schema', 'pg_catalog')
+        {% if exclude_schemas %}
+        and table_schema not in ('{{exclude_schemas | join("', '")}}')
+        {% endif %}
+        {% for exclude_schema_like in exclude_schemas_like %}
+        and table_schema not like '{{ exclude_schema_like }}'
+        {% endfor %}
+        -- write your own constraints here
+    order by table_schema, table_name
+{% endmacro %}
 
 ```
-This macro will skip any relations that are dropped in the time betwen running
+When you run the `redshift_maintenance` macro, your version of `vacuumable_tables_sql`
+will be respected.
+
+Note: This macro will skip any relations that are dropped in the time betwen running
 the initial query, and the point at which you try to vacuum it. This results in
 a message like so:
 ```
