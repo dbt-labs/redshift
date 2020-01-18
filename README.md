@@ -176,5 +176,5 @@ Note: This macro will skip any relations that are dropped in the time betwen run
 the initial query, and the point at which you try to vacuum it. This results in
 a message like so:
 ```
-13:18:22 + 1 of 157 Relation "analytics"."dbt_claire"."amazon_orders" does not exist
+13:18:22 + 1 of 157 Skipping relation "analytics"."dbt_claire"."amazon_orders" as it does not exist
 ```

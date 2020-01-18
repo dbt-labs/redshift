@@ -57,7 +57,7 @@
             {% set total_seconds = (end - start).total_seconds() | round(2)  %}
             {{ dbt_utils.log_info(message_prefix ~ " Finished " ~ relation_to_vacuum ~ " in " ~ total_seconds ~ "s") }}
         {% else %}
-            {{ dbt_utils.log_info(message_prefix ~ ' Relation "' ~ row.values() | join ('"."') ~ '" does not exist') }}
+            {{ dbt_utils.log_info(message_prefix ~ ' Skipping relation "' ~ row.values() | join ('"."') ~ '" as it does not exist') }}
         {% endif %}
 
     {% endfor %}
