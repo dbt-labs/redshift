@@ -149,30 +149,28 @@ $ dbt run-operation redshift_maintenance --args '{exclude_schemas: ["looker_scra
 ```
 You can also implement your own query to choose which tables to vacuum. To do so,
 create a macro in your **own project** named `vacuumable_tables_sql`, following
-the same pattern as the macro in [this package](macros/redshift_maintenance_operation.sql):
+the same pattern as the macro in [this package](macros/redshift_maintenance_operation.sql).
+Here's an example:
 ```sql
 -- my_project/macros/redshift_maintenance_operation.sql
-{% macro vacuumable_tables_sql(exclude_schemas, exclude_schemas_like) %}
-    select
-      current_database() as table_database,
-      table_schema,
-      table_name
-    from information_schema.tables
-    where table_type = 'BASE TABLE'
-        and table_schema not in ('information_schema', 'pg_catalog')
-        {% if exclude_schemas %}
-        and table_schema not in ('{{exclude_schemas | join("', '")}}')
-        {% endif %}
-        {% for exclude_schema_like in exclude_schemas_like %}
-        and table_schema not like '{{ exclude_schema_like }}'
-        {% endfor %}
-        -- write your own constraints here
-    order by table_schema, table_name
-{% endmacro %}
+{% macro vacuumable_tables_sql() %}
+{%- set limit=kwargs.get('limit') -%}
+select
+    current_database() as table_database,
+    table_schema,
+    table_name
+from information_schema.tables
+where table_type = 'BASE TABLE'
 
+order by table_schema, table_name
+{% if limit %}
+limit ~ {{ limit }}
+{% endif %}
+{% endmacro %}
 ```
 When you run the `redshift_maintenance` macro, your version of `vacuumable_tables_sql`
-will be respected.
+will be respected. You can also add arguments to your version of `vacuumable_tables_sql`
+by following the pattern in the `vacuumable_tables_sql` macro in this package.
 
 Note: This macro will skip any relations that are dropped in the time betwen running
 the initial query, and the point at which you try to vacuum it. This results in

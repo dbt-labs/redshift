@@ -1,4 +1,11 @@
-{% macro vacuumable_tables_sql(exclude_schemas, exclude_schemas_like) %}
+{% macro vacuumable_tables_sql() %}
+    {#-
+    Pull the arguments out of the kwargs dictionary. This allows folks to define
+    whatever arguments they want, e.g. a variable limit
+    -#}
+    {%- set exclude_schemas=kwargs.get('exclude_schemas', []) -%}
+    {%- set exclude_schemas_like=kwargs.get('exclude_schemas_like', []) -%}
+
     select
         current_database() as table_database,
         table_schema,
@@ -15,24 +22,17 @@
     order by table_schema, table_name
 {% endmacro %}
 
-{% macro get_vacuumable_tables(exclude_schemas, exclude_schemas_like) %}
-
-    {% set vacuumable_tables=run_query(vacuumable_tables_sql()) %}
-    {{ return(vacuumable_tables.columns[0].values()) }}
-
-{% endmacro %}
-
-{% macro redshift_maintenance(exclude_schemas=[], exclude_schemas_like=[]) %}
-
+{% macro redshift_maintenance() %}
     {#-
     This logic means that if you add your own macro named `vacuumable_tables_sql`
     to your project, that will be used, giving you the flexibility of defining
-    your own query.
+    your own query. Passing it the `kwargs` variable means you can define your
+    own keyword arguments.
     -#}
     {% if context.get(ref.config.project_name, {}).get('vacuumable_tables_sql')  %}
-        {% set vacuumable_tables_sql=context[ref.config.project_name].vacuumable_tables_sql(exclude_schemas, exclude_schemas_like) %}
+        {% set vacuumable_tables_sql=context[ref.config.project_name].vacuumable_tables_sql(**kwargs) %}
     {% else %}
-        {% set vacuumable_tables_sql=redshift.vacuumable_tables_sql(exclude_schemas, exclude_schemas_like) %}
+        {% set vacuumable_tables_sql=redshift.vacuumable_tables_sql(**kwargs) %}
     {% endif %}
 
     {% set vacuumable_tables=run_query(vacuumable_tables_sql) %}
