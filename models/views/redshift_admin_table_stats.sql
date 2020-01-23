@@ -52,8 +52,7 @@ with unsorted_by_table as (
 
   select
     sum(capacity) as total_megabytes
-  from
-  stv_partitions
+  from {{ref('stv_partitions')}}
   where part_begin=0
 
 ), table_distribution_ratio as (
