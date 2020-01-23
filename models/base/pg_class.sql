@@ -30,4 +30,4 @@ select
 , relhasrules
 , relhassubclass
 , relacl
-from pg_class
+from pg_catalog.pg_class

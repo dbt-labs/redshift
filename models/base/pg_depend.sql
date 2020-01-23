@@ -6,4 +6,4 @@ select
 , refobjid
 , refobjsubid
 , deptype
-from pg_depend
+from pg_catalog.pg_depend

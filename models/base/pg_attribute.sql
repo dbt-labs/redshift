@@ -27,4 +27,4 @@ select
 , (case attsortkeyord
         when 1 then attname
         else null end) as sort_key
-from pg_attribute
+from pg_catalog.pg_attribute

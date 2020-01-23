@@ -23,4 +23,4 @@ select
 , num_readers
 , id
 , flags
-from svv_diskusage
+from pg_catalog.svv_diskusage

@@ -7,4 +7,4 @@ select
 , plannode
 , info
 
-from stl_explain
+from pg_catalog.stl_explain

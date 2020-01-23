@@ -21,4 +21,4 @@ select
 , num_readers
 , id
 , flags
-from stv_blocklist
+from pg_catalog.stv_blocklist

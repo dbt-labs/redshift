@@ -3,4 +3,4 @@ select
 , nspname
 , nspowner
 , nspacl
-from pg_namespace
+from pg_catalog.pg_namespace
