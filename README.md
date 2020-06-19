@@ -2,6 +2,12 @@
 
 [dbt](https://www.getdbt.com) models for [Redshift](https://aws.amazon.com/redshift/) warehouses.
 
+## Installation instructions
+
+1. Include this package in your `packages.yml` -- check [here](https://hub.getdbt.com/fishtown-analytics/segment/latest/)
+for installation instructions.
+2. Run `dbt deps`
+
 ### Models
 
 This package provides a number of base models for Redshift system tables, as well as a few utility views that usefully combine the base models.
@@ -178,3 +184,6 @@ a message like so:
 ```
 13:18:22 + 1 of 157 Skipping relation "analytics"."dbt_claire"."amazon_orders" as it does not exist
 ```
+
+### Contributing
+Additional contributions to this repo are very welcome! Check out [this post](https://discourse.getdbt.com/t/contributing-to-a-dbt-package/657) on the best workflow for contributing to a package. All PRs should only include functionality that is contained within all Redshift deployments; no implementation-specific details should be included.
