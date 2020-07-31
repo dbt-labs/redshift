@@ -6,4 +6,4 @@ select
 , hasindexes as has_indexes
 , hasrules as has_rules
 , hastriggers as has_triggers
-from pg_tables
+from pg_catalog.pg_tables

@@ -10,4 +10,4 @@ select
 , endtime as finished_at
 , aborted
 
-from stl_query
+from pg_catalog.stl_query

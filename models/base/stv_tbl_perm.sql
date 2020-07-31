@@ -8,4 +8,4 @@ select
 , temp
 , db_id
 , backup
-from stv_tbl_perm
+from pg_catalog.stv_tbl_perm

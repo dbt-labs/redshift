@@ -16,4 +16,4 @@ select
 , service_class_end_time
 , final_state
 
-from stl_wlm_query
+from pg_catalog.stl_wlm_query
