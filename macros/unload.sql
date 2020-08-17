@@ -6,14 +6,13 @@ authorization
 [ option [ ... ] ]
 
 where option is
-
-{ MANIFEST [ VERBOSE ] 
-| HEADER
-
-| [ FORMAT [AS] ] CSV
+{ [ FORMAT [ AS ] ] CSV | PARQUET
+| PARTITION BY ( column_name [, ... ] ) [ INCLUDE ]
+| MANIFEST [ VERBOSE ] 
+| HEADER           
 | DELIMITER [ AS ] 'delimiter-char' 
-| FIXEDWIDTH [ AS ] 'fixedwidth-spec' }  
-| ENCRYPTED
+| FIXEDWIDTH [ AS ] 'fixedwidth-spec'   
+| ENCRYPTED [ AUTO ]
 | BZIP2  
 | GZIP 
 | ZSTD
@@ -22,8 +21,8 @@ where option is
 | ESCAPE
 | ALLOWOVERWRITE
 | PARALLEL [ { ON | TRUE } | { OFF | FALSE } ]
-| MAXFILESIZE [AS] max-size [ MB | GB ] ]
-| REGION [AS] 'aws-region'
+| MAXFILESIZE [AS] max-size [ MB | GB ] 
+| REGION [AS] 'aws-region' }
 
 #}
 -- Unloads a Redshift table to S3
@@ -45,7 +44,9 @@ where option is
                 add_quotes=False,
                 encrypted=False,
                 overwrite=False,
-                parallel=False) %}
+                parallel=False,
+                partition_by=None
+                ) %}
 
   -- compile UNLOAD statement
   UNLOAD ('SELECT * FROM "{{ schema }}"."{{ table }}"')
@@ -94,5 +95,7 @@ where option is
   {% if aws_region %}
   REGION '{{ aws_region }}'
   {% endif %}
-
+  {% if partition_by %}
+  PARTITION BY ( {{ partition_by | join(', ') }} )
+  {% endif %}
 {% endmacro %}
