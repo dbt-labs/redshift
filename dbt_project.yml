@@ -2,7 +2,7 @@ name: 'redshift'
 version: '0.3.0'
 config-version: 2
 
-require-dbt-version: [">=0.18.0"]
+require-dbt-version: [">=0.17.0"]
 
 source-paths: ["models"]
 macro-paths: ["macros"]
