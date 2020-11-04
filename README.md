@@ -98,6 +98,7 @@ Macro signature:
                 iam_role=None|String,
                 aws_key=None|String,
                 aws_secret=None|String,
+                aws_token=None|String,
                 aws_region=None|String,
                 manifest=Boolean,
                 header=Boolean,
