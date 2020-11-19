@@ -3,7 +3,7 @@
 {%- if datatype == 'bigint' or datatype == 'int' -%}
 
     case
-        when trim({{str}}) ~ '^[0-9]+$' then trim({{str}})
+        when trim({{str}}) ~ '^-?[0-9]+$' then trim({{str}})
         else null
     end::{{datatype}}
 
