@@ -4,7 +4,7 @@
 
 ## Installation instructions
 
-1. Include this package in your `packages.yml` -- check [here](https://hub.getdbt.com/fishtown-analytics/redshift/latest/)
+1. Include this package in your `packages.yml` -- check [here](https://hub.getdbt.com/dbt-labs/redshift/latest/)
 for installation instructions.
 2. Run `dbt deps`
 
