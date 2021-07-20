@@ -65,7 +65,7 @@ where option is
   {{ exceptions.raise_compiler_error("You must provide AWS authorization parameters via 'iam_role' or 'aws_key' and 'aws_secret'.") }}
   {% endif %}
   {% if manifest %}
-  MANIFEST
+  MANIFEST VERBOSE
   {% endif %}
   {% if header %}
   HEADER
