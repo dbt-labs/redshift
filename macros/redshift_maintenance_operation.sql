@@ -29,8 +29,9 @@
     your own query. Passing it the `kwargs` variable means you can define your
     own keyword arguments.
     -#}
-    {% if context.get(ref.config.project_name, {}).get('vacuumable_tables_sql')  %}
-        {% set vacuumable_tables_sql=context[ref.config.project_name].vacuumable_tables_sql(**kwargs) %}
+    {% set root_project = context.project_name %}
+    {% if context.get(root_project, {}).get('vacuumable_tables_sql')  %}
+        {% set vacuumable_tables_sql=context[root_project].vacuumable_tables_sql(**kwargs) %}
     {% else %}
         {% set vacuumable_tables_sql=redshift.vacuumable_tables_sql(**kwargs) %}
     {% endif %}
