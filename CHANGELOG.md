@@ -1,4 +1,4 @@
-# redshift 0.6.1'
+# redshift 0.6.1
 ## Fixes
 - `redshift_maintenance()` macro now works if a custom `ref()` macro exists in the project ([#52](https://github.com/dbt-labs/redshift/issues/52), [#53](https://github.com/dbt-labs/redshift/pull/53)) ([@jeremyyeo](https://github.com/jeremyyeo))
 
