@@ -61,10 +61,14 @@
 
 {%- macro compress_table(schema, table, drop_backup=False,
                          comprows=none, sort_style=none, sort_keys=none,
-                         dist_style=none, dist_key=none) -%}
+                         dist_style=none, dist_key=none, skip_if_incremental=False) -%}
 
   {% if not execute %}
     {{ return(none) }}
+  {% endif %}
+  
+  {% if skip_if_incremental and is_incremental() %}
+    {{ return('') }}
   {% endif %}
 
   {% set recommendation = redshift.find_analyze_recommendations(schema, table, comprows) %}
