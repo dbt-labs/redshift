@@ -111,6 +111,7 @@ Macro signature:
                 add_quotes=Boolean,
                 encrypted=Boolean,
                 overwrite=Boolean,
+                cleanpath=Boolean,
                 parallel=Boolean,
                 partition_by=none|List<String>
 ) }}

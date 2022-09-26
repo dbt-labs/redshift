@@ -20,6 +20,7 @@ where option is
 | NULL [ AS ] 'null-string'
 | ESCAPE
 | ALLOWOVERWRITE
+| CLEANPATH
 | PARALLEL [ { ON | TRUE } | { OFF | FALSE } ]
 | MAXFILESIZE [AS] max-size [ MB | GB ] 
 | REGION [AS] 'aws-region' }
@@ -45,6 +46,7 @@ where option is
                 add_quotes=False,
                 encrypted=False,
                 overwrite=False,
+                cleanpath=False,
                 parallel=False,
                 partition_by=None
                 ) %}
@@ -93,6 +95,9 @@ where option is
   {% if overwrite %}
   ALLOWOVERWRITE
   {% endif %}
+  {% if cleanpath %}
+  CLEANPATH
+  {% endif %}  
   {% if not parallel %}
   PARALLEL OFF
   {% endif %}
