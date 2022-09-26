@@ -18,7 +18,7 @@
 
     from pg_catalog.pg_namespace n
     join pg_catalog.pg_class c on n.oid = c.relnamespace
-    left outer join pg_description d ON (d.objoid = c.oid AND d.objsubid = 0)
+    left outer join pg_catalog.pg_description d ON (d.objoid = c.oid AND d.objsubid = 0)
 
     where schemaname not like 'pg_%'
       and schemaname != 'information_schema'
@@ -58,11 +58,11 @@
 
             a.attnotnull as col_not_null
 
-        from pg_namespace as n
-        inner join pg_class as c on n.oid = c.relnamespace
-        inner join pg_attribute as a on c.oid = a.attrelid
-        left outer join pg_description as d ON (d.objoid = a.attrelid AND d.objsubid = a.attnum)
-        left outer join pg_attrdef as adef on a.attrelid = adef.adrelid and a.attnum = adef.adnum
+        from pg_catalog.pg_namespace as n
+        inner join pg_catalog.pg_class as c on n.oid = c.relnamespace
+        inner join pg_catalog.pg_attribute as a on c.oid = a.attrelid
+        left outer join pg_catalog.pg_description as d ON (d.objoid = a.attrelid AND d.objsubid = a.attnum)
+        left outer join pg_catalog.pg_attrdef as adef on a.attrelid = adef.adrelid and a.attnum = adef.adnum
         where c.relkind = 'r'
           and a.attnum > 0
 
@@ -112,9 +112,9 @@
 
             max(case when c.reldiststyle = 1 and a.attisdistkey IS TRUE and a.attnum > 0 then a.attname else null end) over (partition by n.nspname, c.relname) as dist_key
 
-        from pg_namespace as n
-        inner join pg_class as c on n.oid = c.relnamespace
-        inner join pg_attribute as a on c.oid = a.attrelid
+        from pg_catalog.pg_namespace as n
+        inner join pg_catalog.pg_class as c on n.oid = c.relnamespace
+        inner join pg_catalog.pg_attribute as a on c.oid = a.attrelid
         where c.relkind = 'r'
 
     ),
@@ -131,9 +131,9 @@
             end as sort_style,
             listagg(a.attname, '|') within group (order by a.attsortkeyord) over (partition by n.nspname, c.relname) as sort_keys
 
-        from  pg_namespace as n
-        inner join pg_class as c on n.oid = c.relnamespace
-        inner join pg_attribute as a on c.oid = a.attrelid
+        from pg_catalog.pg_namespace as n
+        inner join pg_catalog.pg_class as c on n.oid = c.relnamespace
+        inner join pg_catalog.pg_attribute as a on c.oid = a.attrelid
         where c.relkind = 'r'
           and abs(a.attsortkeyord) > 0
           and a.attnum > 0
