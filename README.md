@@ -113,7 +113,8 @@ Macro signature:
                 overwrite=Boolean,
                 cleanpath=Boolean,
                 parallel=Boolean,
-                partition_by=none|List<String>
+                partition_by=none|List<String>,
+                extension=None|String
 ) }}
 ```
 
