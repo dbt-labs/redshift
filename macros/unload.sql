@@ -24,6 +24,7 @@ where option is
 | PARALLEL [ { ON | TRUE } | { OFF | FALSE } ]
 | MAXFILESIZE [AS] max-size [ MB | GB ] 
 | REGION [AS] 'aws-region' }
+| EXTENSION 'extension-name'
 
 #}
 -- Unloads a Redshift table to S3
@@ -48,7 +49,8 @@ where option is
                 overwrite=False,
                 cleanpath=False,
                 parallel=False,
-                partition_by=None
+                partition_by=None,
+                extension=None
                 ) %}
 
   -- compile UNLOAD statement
@@ -106,5 +108,8 @@ where option is
   {% endif %}
   {% if partition_by %}
   PARTITION BY ( {{ partition_by | join(', ') }} )
+  {% endif %}
+  {% if extension %}
+  EXTENSION '{{ extension }}'
   {% endif %}
 {% endmacro %}
