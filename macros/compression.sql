@@ -41,12 +41,11 @@
 
 {%- endmacro %}
 
-{%- macro alter_column_encoding(schema, table, updated_encodings) -%}
+{%- macro alter_column_encodings(schema, table, updated_encodings) -%}
   
   {% for column_name, encoding in updated_encodings.items() %}
       alter table {{ schema }}.{{ table }} alter {{ column_name }} encode {{ encoding }}; 
   {% endfor %}
-  commit;
 
 {% endmacro %}
 
@@ -93,7 +92,7 @@
   {% if in_place %}
       -- only alter the column encodings if at least one column will change to avoid returning an empty query
       {% if updated_encodings %}
-        {{ redshift.alter_column_encoding(schema, table, updated_encodings) }}
+        {{ redshift.alter_column_encodings(schema, table, updated_encodings) }}
       {% endif %}
   {% else %}
     {% set _ = optimized.update({"keys": optimized.get('keys', {}) | default({})}) %}
