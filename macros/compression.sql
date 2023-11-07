@@ -18,6 +18,9 @@
 
 {% macro build_optimized_definition(definition, recommendation) -%}
 
+    -- tracks which (if any) of the column encodings will change; used when in_place=True to prevent alter_column_encodings() from returning an empty query
+    {% set updated_encodings = {} %}
+
     {% set optimized = {} %}
     {% set _ = optimized.update(definition) %}
     {% for name, column in definition['columns'].items() %}
@@ -25,16 +28,26 @@
 
         {% if recommended_encoding['encoding'] != column['encoding'] %}
             {{ log("    Changing " ~ name ~ ": " ~ column['encoding'] ~ " -> " ~ recommended_encoding['encoding'] ~ " (" ~ recommended_encoding['reduction_pct'] ~ "%)") }}
+            {% set _ = updated_encodings.update({column['name']: recommended_encoding['encoding']}) %}
         {% else %}
             {{ log("Not Changing " ~ name ~ ": " ~ column['encoding']) }}
         {% endif %}
 
         {% set _ = optimized['columns'][name].update({"encoding": recommended_encoding['encoding']}) %}
+
     {% endfor %}
 
-    {{ return(optimized) }}
+    {{ return((optimized, updated_encodings)) }}
 
 {%- endmacro %}
+
+{%- macro alter_column_encodings(schema, table, updated_encodings) -%}
+  
+  {% for column_name, encoding in updated_encodings.items() %}
+      alter table {{ schema }}.{{ table }} alter {{ column_name }} encode {{ encoding }}; 
+  {% endfor %}
+
+{% endmacro %}
 
 {%- macro insert_into_sql(from_schema, from_table, to_schema, to_table) -%}
 
@@ -59,9 +72,9 @@
 
 {%- endmacro -%}
 
-{%- macro compress_table(schema, table, drop_backup=False,
-                         comprows=none, sort_style=none, sort_keys=none,
-                         dist_style=none, dist_key=none) -%}
+{%- macro compress_table(schema, table, in_place=False, 
+                         drop_backup=False, comprows=none, sort_style=none, 
+                         sort_keys=none, dist_style=none, dist_key=none) -%}
 
   {% if not execute %}
     {{ return(none) }}
@@ -74,20 +87,28 @@
     {{ return(none) }}
   {% endif %}
 
-  {% set optimized = redshift.build_optimized_definition(definition, recommendation) %}
+  {% set optimized, updated_encodings = redshift.build_optimized_definition(definition, recommendation) %}
 
-  {% set _ = optimized.update({"keys": optimized.get('keys', {}) | default({})}) %}
-  {% if sort_style %} {% set _ = optimized['keys'].update({"sort_style": sort_style}) %} {% endif %}
-  {% if sort_keys %}  {% set _ = optimized['keys'].update({"sort_keys": sort_keys}) %} {% endif %}
-  {% if dist_style %} {% set _ = optimized['keys'].update({"dist_style": dist_style}) %} {% endif %}
-  {% if dist_key %}   {% set _ = optimized['keys'].update({"dist_key": dist_key}) %} {% endif %}
+  {% if in_place %}
+      -- only alter the column encodings if at least one column will change to avoid returning an empty query
+      {% if updated_encodings %}
+        {{ redshift.alter_column_encodings(schema, table, updated_encodings) }}
+      {% endif %}
+  {% else %}
+    {% set _ = optimized.update({"keys": optimized.get('keys', {}) | default({})}) %}
 
-  {% set new_table = table ~ "__compressed" %}
-  {% set _ = optimized.update({'name': new_table}) %}
+    {% if sort_style %} {% set _ = optimized['keys'].update({"sort_style": sort_style}) %} {% endif %}
+    {% if sort_keys %}  {% set _ = optimized['keys'].update({"sort_keys": sort_keys}) %} {% endif %}
+    {% if dist_style %} {% set _ = optimized['keys'].update({"dist_style": dist_style}) %} {% endif %}
+    {% if dist_key %}   {% set _ = optimized['keys'].update({"dist_key": dist_key}) %} {% endif %}
 
-  {# Build the DDL #}
-  {{ redshift.build_ddl_sql(optimized) }}
-  {{ redshift.insert_into_sql(schema, table, schema, new_table) }}
-  {{ redshift.atomic_swap_sql(schema, table, new_table, drop_backup) }}
+    {% set new_table = table ~ "__compressed" %}
+    {% set _ = optimized.update({'name': new_table}) %}
+
+    {# Build the DDL #}
+    {{ redshift.build_ddl_sql(optimized) }}
+    {{ redshift.insert_into_sql(schema, table, schema, new_table) }}
+    {{ redshift.atomic_swap_sql(schema, table, new_table, drop_backup) }}
+  {% endif %}
 
 {%- endmacro %}

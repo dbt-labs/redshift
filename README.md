@@ -59,11 +59,18 @@ These models (default ephemeral) make it possible to inspect tables, columns, co
 
 #### compress_table ([source](macros/compression.sql))
 
-This macro returns the SQL required to auto-compress a table using the results of an `analyze compression` query. All comments, constraints, keys, and indexes are copied to the newly compressed table by this macro. Additionally, sort and dist keys can be provided to override the settings from the source table. By default, a backup table is made which is _not_ deleted. To delete this backup table after a successful copy, use `drop_backup` flag.
+This macro returns the SQL required to auto-compress a table using the results of an `analyze compression` query. 
+
+If `in_place=False` (default behavior), the table is renamed to `{{ table }}__backup` and replaced by a deep copy that utilizes the recommended encodings. All comments, constraints, keys, and indexes are copied to the newly compressed table by this macro. Additionally, sort and dist keys can be provided to override the settings from the source table. By default, the backup table is _not_ deleted; to delete the backup table after a successful copy, use `drop_backup` flag.
+
+If `in_place=True`, columns whose encodings differ from the recommended encoding will be directly updated using the `ALTER TABLE {{ table }} ALTER COLUMN {{ column }} ENCODE {{ encoding }}` command. Since this process does not require a deep copy of the target table, subsequent optional arguments are ignored. 
+
+For guidance on if `in_place` is appropriate, consult [the AWS documentation](https://aws.amazon.com/about-aws/whats-new/2020/10/amazon-redshift-supports-modifying-column-comprression-encodings-to-optimize-storage-utilization-query-performance/) and [release announcement](https://aws.amazon.com/about-aws/whats-new/2020/10/amazon-redshift-supports-modifying-column-comprression-encodings-to-optimize-storage-utilization-query-performance/).
 
 Macro signature:
 ```
 {{ compress_table(schema, table,
+                  in_place=False,
                   drop_backup=False,
                   comprows=none|Integer,
                   sort_style=none|compound|interleaved,
