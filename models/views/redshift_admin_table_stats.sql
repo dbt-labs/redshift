@@ -94,20 +94,20 @@ select
 
 from unsorted_by_table
 
-inner join pg_class
+left join pg_class
   on pg_class.oid = unsorted_by_table.table_id
 
-inner join pg_namespace
+left join pg_namespace
   on pg_namespace.oid = pg_class.relnamespace
 
-inner join capacity
+left join capacity
   on 1=1
 
 left join table_sizes
   on unsorted_by_table.table_id = table_sizes.table_id
 
-inner join table_attributes
+left join table_attributes
   on table_attributes.table_id = unsorted_by_table.table_id
 
-inner join table_distribution_ratio
+left join table_distribution_ratio
   on table_distribution_ratio.table_id = unsorted_by_table.table_id
