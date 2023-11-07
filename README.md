@@ -59,7 +59,8 @@ These models (default ephemeral) make it possible to inspect tables, columns, co
 
 #### compress_table ([source](macros/compression.sql))
 
-This macro returns the SQL required to auto-compress a table using the results of an `analyze compression` query. All comments, constraints, keys, and indexes are copied to the newly compressed table by this macro. Additionally, sort and dist keys can be provided to override the settings from the source table. By default, a backup table is made which is _not_ deleted. To delete this backup table after a successful copy, use `drop_backup` flag.
+This macro returns the SQL required to auto-compress a table using the results of an `analyze compression` query. All comments, constraints, keys, and indexes are copied to the newly compressed table by this macro. Additionally, sort and dist keys can be provided to override the settings from the source table. By default, a backup table is made which is _not_ deleted. To delete this backup table after a successful copy, use `drop_backup` flag. 
+Note, that this macro will have to rewrite the entire table. The `skip_if_incremental` flag can be used to skip this macro if it is being called in an `is_incremental()` context, e.g. when used as a post-hook on an incremental model.
 
 Macro signature:
 ```
@@ -69,7 +70,8 @@ Macro signature:
                   sort_style=none|compound|interleaved,
                   sort_keys=none|List<String>,
                   dist_style=none|all|even,
-                  dist_key=none|String) }}
+                  dist_key=none|String,
+                  skip_if_incremental=False) }}
 ```
 
 Example usage:
