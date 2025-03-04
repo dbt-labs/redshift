@@ -116,6 +116,7 @@ Macro signature:
                 cleanpath=Boolean,
                 parallel=Boolean,
                 partition_by=none|List<String>,
+                include_partition=Boolean,
                 extension=None|String
 ) }}
 ```
