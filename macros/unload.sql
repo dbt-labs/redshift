@@ -50,6 +50,7 @@ where option is
                 cleanpath=False,
                 parallel=False,
                 partition_by=None,
+                include_partition=False,
                 extension=None
                 ) %}
 
@@ -108,6 +109,9 @@ where option is
   {% endif %}
   {% if partition_by %}
   PARTITION BY ( {{ partition_by | join(', ') }} )
+    {% if include_partition %}
+    INCLUDE
+    {% endif %}
   {% endif %}
   {% if extension %}
   EXTENSION '{{ extension }}'
